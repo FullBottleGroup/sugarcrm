@@ -25,7 +25,7 @@ module SugarCRM
       @fields_registered = false
       self
     end
-    
+
     # Return true if this module was created in the SugarCRM Studio (i.e. it is not part of the modules that
     # ship in the default SugarCRM configuration)
     def custom_module?
@@ -33,7 +33,7 @@ module SugarCRM
       # whereas SugarCRM modules are CamelCase
       @name.include? '_'
     end
-    
+
     # Returns the fields associated with the module
     def fields
       return @fields if fields_registered?
@@ -44,36 +44,38 @@ module SugarCRM
       @fields_registered = true
       @fields
     end
-    
+
     def fields_registered?
       @fields_registered
     end
-    
+
     alias :link_fields_registered? :fields_registered?
-    
+
     # Returns the required fields
     def required_fields
       required_fields = []
       ignore_fields = [:id, :date_entered, :date_modified]
       self.fields.each_value do |field|
-        next if ignore_fields.include? field["name"].to_sym
-        required_fields << field["name"].to_sym if field["required"] == 1
-      end 
+        unless field_name.nil? or field_name.empty?
+          next if ignore_fields.include? field["name"].to_sym
+          required_fields << field["name"].to_sym if field["required"] == 1
+        end
+      end
       required_fields
     end
-    
+
     def link_fields
       self.fields unless link_fields_registered?
       handle_empty_arrays
       @link_fields
     end
-    
+
     # TODO: Refactor this to be less repetitive
     def handle_empty_arrays
       @fields = {}.with_indifferent_access if @fields.length == 0
       @link_fields = {}.with_indifferent_access if @link_fields.length == 0
     end
-    
+
     # Registers a single module by name
     # Adds module to SugarCRM.modules (SugarCRM.modules << Module.new("Users"))
     # Adds module class to SugarCRM parent module (SugarCRM.constants << User)
@@ -89,12 +91,12 @@ module SugarCRM
         self._module = mod_instance
         self.session = sess
       end
-      
+
       # class Account < SugarCRM::Base
       @session.namespace_const.const_set self.klass, klass
       self
     end
-    
+
     # Deregisters the module
     def deregister
       return true unless registered?
@@ -105,19 +107,19 @@ module SugarCRM
 
     def registered?
       @session.namespace_const.const_defined? @klass
-    end  
-      
+    end
+
     def to_s
       @klass
     end
-    
+
     def to_class
       SugarCRM.const_get(@klass).new
     end
-      
+
     class << self
       @initialized = false
-      
+
       # Registers all of the SugarCRM Modules
       def register_all(session)
         namespace = session.namespace_const
@@ -127,7 +129,7 @@ module SugarCRM
         @initialized = true
         true
       end
-      
+
       # Deregisters all of the SugarCRM Modules
       def deregister_all(session)
         namespace = session.namespace_const
@@ -149,12 +151,12 @@ module SugarCRM
         end
         false
       end
-      
+
       # Class variable to track if we've initialized or not
       def initialized?
         @initialized ||= false
       end
-      
+
     end
   end
 end
